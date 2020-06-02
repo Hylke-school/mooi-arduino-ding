@@ -25,10 +25,10 @@ Ik heb zelf een afstandssensor gebruikt als sensor. Als je zelf iets anders gebr
 
 ![4](https://i.imgur.com/dJFNI75.png)
 
-De server gebruikt getSensorValue() om de sensor waarde naar de app te sturen. Bij het testen gebruikte ik een afstandssensor dus staat daar distance(), een functie die ik daarvoor heb gemaakt. Distance() returnt maximaal 255 centimeer ongeveer. Als je een andere sensor gebruik kan het zijn dat de waarde tussen 0-1023 ligt. Pas dan de functie en gebruik dan map() om het 3 characters ipv 4 te maken (1 + 0 + 2 + 3 = 4 characters). Bijvoorbeeld:
+De server gebruikt getSensorValue() om de sensor waarde naar de app te sturen. Bij het testen gebruikte ik een afstandssensor dus staat daar distance(), een functie die ik daarvoor heb gemaakt. Distance() returnt maximaal 255 centimeer ongeveer. Als je een andere sensor gebruik kan het zijn dat de waarde tussen 0-1023 ligt. Pas dan de functie aan en gebruik dan map() om het 3 characters ipv 4 te maken (1 + 0 + 2 + 3 = 4 characters). Bijvoorbeeld:
 
 ```
 int getSensorValue() {
-  return map(analogRead(sensorPin), 0, 0123, 0, 100);
+  return map(analogRead(sensorPin), 0, 1023, 0, 100);
 }
 ```
