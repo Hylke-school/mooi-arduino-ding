@@ -8,6 +8,10 @@ Alle arduino code voor het IoT project
 
 Op dit moment kan hij een LED lamp aan / uit laten doen. Of ervoor zorgen dat hij automatisch aan / uit gaat als criteriaMode op "a" (auto) staat. 
 
+**De port** staat ingesteld op 11250.
+
+**Het IP Address** krijg je op je seriële monitor te zien. 
+
 ## !!!!!!! HEEL BELANGRIJK !!!!!!!
 
 Lees alles hieronder voordat je begint met testen:
