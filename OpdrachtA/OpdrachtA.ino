@@ -256,6 +256,7 @@ void executeCommand(String cmd)
    // GetSensorValue()
    else if (cmd.startsWith("s")) {
        intToCharBuf(getSensorValue(), buf, 4);
+       server.write(buf, 4);
        Serial.println("GetSensorValue()");
    }
 
@@ -321,8 +322,8 @@ void intToCharBuf(int val, char buf[], int len)
 // IMPORTANT: distance() is 255 cm at most, but analog sensors are range 0-1023 
 // and need to be mapped to something < 1000 so it's 3 characters since Arduino can only send 3 characters at most
 int getSensorValue() {
-  //return map(analogRead(A0), 0, 1023, 0, 100);
-  return distance();
+  return map(analogRead(A0), 0, 1023, 0, 100);
+  //return distance();
 }
 
 // Returns the distance measured by the distance sensor, in cm. 
