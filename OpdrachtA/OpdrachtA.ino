@@ -156,7 +156,7 @@ void loop()
    while (ethernetClient.connected()) 
    {
       //checkEvent(switchPin, pinState);          // update pin state (old code)
-      sensorValue = readSensor(0, 100);           // update sensor value (old code)
+      //sensorValue = readSensor(0, 100);           // update sensor value (old code)
         
       // Activate pin based op pinState
       /* Old code
@@ -364,7 +364,7 @@ void intToCharBuf(int val, char buf[], int len)
 // and need to be mapped to something < 1000 so it's 3 characters since Arduino can only send 3 characters at most
 int getSensorValue() {
   // return map(analogRead(pn), 0, 1023, 0, mx-1);   
-  return distance();
+  return map(analogRead(A0), 0, 1023, 0, 100);
 }
 
 // Returns the distance measured by the distance sensor, in cm. 
