@@ -155,18 +155,6 @@ void loop()
    // Do what needs to be done while the socket is connected.
    while (ethernetClient.connected()) 
    {
-      //checkEvent(switchPin, pinState);          // update pin state (old code)
-      //sensorValue = readSensor(0, 100);           // update sensor value (old code)
-        
-      // Activate pin based op pinState
-      /* Old code
-      if (pinChange) {
-         if (pinState) { digitalWrite(ledPin, HIGH); switchDefault(true); }
-         else { switchDefault(false); digitalWrite(ledPin, LOW); }
-         pinChange = false;
-      }
-      */
-
       // If criteria mode is auto, make pins go on when sensorCriteria is reached (or off it it goes below)
       if (criteriaMode == 'a') {
         if (getSensorValue() > sensorCriteria && pinState == false) {
@@ -260,7 +248,7 @@ void executeCommand(String cmd)
    else if (cmd.startsWith("ma") || cmd.startsWith("mm")) {
        criteriaMode = cmd[1];
        // create "00m\n" or "000a\n", response needs to be 4 bytes...
-       buf[0] = '0';   buf[1] = '0';   buf[2] = criteriaMode;  buf[3] = "\n"; 
+       buf[0] = '0';   buf[1] = '0';   buf[2] = criteriaMode;  buf[3] = '\n'; 
        server.write(buf, 4);
        Serial.println("New criteria mode: " + criteriaMode);
    }
@@ -268,7 +256,6 @@ void executeCommand(String cmd)
    // GetSensorValue()
    else if (cmd.startsWith("s")) {
        intToCharBuf(getSensorValue(), buf, 4);
-       server.write(buf, 4);
        Serial.println("GetSensorValue()");
    }
 
@@ -288,7 +275,7 @@ void executeCommand(String cmd)
    // GetCriteriaMode()
    else if (cmd.startsWith("m")) {
       // create "00m\n" or "00a\n", response needs to be 4 bytes...
-      buf[0] = '0';   buf[1] = '0';   buf[2] = criteriaMode;  buf[3] = "\n"; 
+      buf[0] = '0';   buf[1] = '0';   buf[2] = criteriaMode;  buf[3] = '\n'; 
       server.write(buf, 4);
       Serial.println("GetCriteriaMode(): " + criteriaMode);
    }
@@ -300,35 +287,6 @@ void executeCommand(String cmd)
       server.write(pinState ? " ON\n" : "OFF\n", 4);
       Serial.println("TogglePinState(): new state is " + pinState  ? "ON" : "OFF");
    }
-
-   /* Old code from Sibbele 
-   switch (cmd) {
-   case 'a': // Report sensor value to the app  
-      intToCharBuf(sensorValue, buf, 4);                // convert to charbuffer
-      server.write(buf, 4);                             // response is always 4 chars (\n included)
-      Serial.print("Sensor: "); Serial.println(buf);
-      break;
-   case 's': // Report switch state to the app
-      if (pinState) { server.write(" ON\n"); Serial.println("Pin state is ON"); }  // always send 4 chars
-      else { server.write("OFF\n"); Serial.println("Pin state is OFF"); }
-      break;
-   case 't': // Toggle state; If state is already ON then turn it OFF
-      if (pinState) { pinState = false; Serial.println("Set pin state to \"OFF\""); }
-      else { pinState = true; Serial.println("Set pin state to \"ON\""); }  
-      pinChange = true; 
-      break;
-   case 'i':    
-      digitalWrite(infoPin, HIGH);
-      break;
-   case 'r':
-      int cm = distance();
-      intToCharBuf(cm, buf, 4);
-      server.write(buf, 4);
-      break;
-   default:
-      digitalWrite(infoPin, LOW);
-   }
-   */
 }
 
 // Read value from pin pn, return value is mapped between 0 and mx-1
@@ -363,12 +321,12 @@ void intToCharBuf(int val, char buf[], int len)
 // IMPORTANT: distance() is 255 cm at most, but analog sensors are range 0-1023 
 // and need to be mapped to something < 1000 so it's 3 characters since Arduino can only send 3 characters at most
 int getSensorValue() {
-  // return map(analogRead(pn), 0, 1023, 0, mx-1);   
-  return map(analogRead(A0), 0, 1023, 0, 100);
+  //return map(analogRead(A0), 0, 1023, 0, 100);
+  return distance();
 }
 
 // Returns the distance measured by the distance sensor, in cm. 
-int distance () {
+int distance() {
     long timeWaited, cm;
  
     // De sensor wordt getriggerd bij 10 us, geef eerst een lage puls om een schone hoge puls te krijgen
