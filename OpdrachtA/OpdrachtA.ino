@@ -73,13 +73,15 @@ void executeCommand(char cmd)
   //*  R:  Received bell
   //*      Confirmation from the app, it received the bell press
   //*    Returns: nothing
-  //*  S:  Close package box (Sluiten)
+  //*  L:  Close package box
   //*      Call the function that will close and lock the package box
   //*    Returns: nothing
   //*  O:  Open the package box
   //*      Calls the function that will open the package box.
   //*      Start function to watch if the weight sensor has changed
   //*    Returns: nothing
+  //*  S: Status of package box
+  //*    Return: CLS if box is closed and locked, returns OPN if box is unlocked
   
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!!!!!!!!!!!!  IMPORTANT  !!!!!!!!!!!!!
@@ -95,16 +97,22 @@ void executeCommand(char cmd)
   switch(cmd)
   {
     case 'c':
-      server.write(" OK\n");
+      server.write(" OK\n",4);
       break;
     case 'r':
       beenPressed = false;
       break;
-    case 's':
+    case 'l':
       closePackageBox();
       break;
     case 'o':
       openPackageBox();
+      break;
+    case 's':
+      if (checkBoxStatus())
+        server.write("CLS\n", 4);
+      else 
+        server.write("OPN\n", 4);
       break;
   }
 }
@@ -134,4 +142,14 @@ void closePackageBox()
 void openPackageBox() 
 {
 
+}
+
+//Check the status of the box
+// False = open / unlocked
+// True = Closed / locked
+bool checkBoxStatus() 
+{
+  
+  
+  return false;
 }
