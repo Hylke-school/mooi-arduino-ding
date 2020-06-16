@@ -73,10 +73,10 @@ void executeCommand(char cmd)
   //*  R:  Received bell
   //*      Confirmation from the app, it received the bell press
   //*    Returns: nothing
-  //*  L:  Close package box
+  //*  L:  Lock package box
   //*      Call the function that will close and lock the package box
   //*    Returns: nothing
-  //*  O:  Open the package box
+  //*  U:  Unlock the package box
   //*      Calls the function that will open the package box.
   //*      Start function to watch if the weight sensor has changed
   //*    Returns: nothing
@@ -105,7 +105,7 @@ void executeCommand(char cmd)
     case 'l':
       closePackageBox();
       break;
-    case 'o':
+    case 'u':
       openPackageBox();
       break;
     case 's':
