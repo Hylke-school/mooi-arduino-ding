@@ -9,12 +9,18 @@ int ethPort = 11250;                                  // Take a free port (check
 int buttonPin = 2;
 boolean beenPressed = false;
 
+int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
+int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
+
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
 
 void setup()
 {
   Serial.begin(9600);
   pinMode(buttonPin, INPUT);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 
   Serial.println("Domotica project, Arduino Domotica Server\n");
 
@@ -78,10 +84,11 @@ void executeCommand(char cmd)
   //*    Returns: nothing
   //*  U:  Unlock the package box
   //*      Calls the function that will open the package box.
-  //*      Start function to watch if the weight sensor has changed
   //*    Returns: nothing
   //*  S: Status of package box
-  //*    Return: CLS if box is closed and locked, returns OPN if box is unlocked
+  //*    Returns: CLS if box is closed and locked, returns OPN if box is unlocked
+  //*  P: Status of package, present or not
+  //*    Returns: YES if box contains package, NO if box does not contain package
   
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!!!!!!!!!!!!  IMPORTANT  !!!!!!!!!!!!!
@@ -114,6 +121,13 @@ void executeCommand(char cmd)
       else 
         server.write("OPN\n", 4);
       break;
+    case 'p':
+      if(HasPackage(trigPin, echoPin, 20)){ //Limit set to 20, change according to the box size
+        server.write("YES\n", 4);
+      }
+      else {
+        server.write(" NO\n", 4);
+      }
   }
 }
 
@@ -152,4 +166,30 @@ bool checkBoxStatus()
   
   
   return false;
+}
+
+//Checks if the box contains an object using the ultrasonic sensor
+//  trig = pin where trigger point is connected (use trigPin)
+//  echo = pin where echo point is connected (use echoPin)
+//  limit = maximum distance required to return true (I recommend the length of the box - 5)
+bool HasPackage(int trig, int echo, int limit){
+  float v = 0.0343; // Speed of sound at 20 degrees Celsius in centimeters/microsecond;
+  long t; // Time
+  int s; // Distance
+
+  // Sends out a soundwave
+  digitalWrite(trig, HIGH);
+  delay(10);
+  digitalWrite(trig, LOW);
+
+  t = pulseIn(echo, HIGH); //Returns the time between start and pulse recieved in microseconds
+
+  s = v * (0.5 * t); //Calculates the distance to an object in centimeters
+
+  if(s < limit){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
