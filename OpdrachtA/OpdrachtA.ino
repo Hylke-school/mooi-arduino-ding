@@ -8,6 +8,7 @@ int ethPort = 11250;                                  // Take a free port (check
 
 int buttonPin = 2;
 boolean beenPressed = false;
+boolean boxLocked = false;
 
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
 
@@ -97,7 +98,7 @@ void executeCommand(char cmd)
   switch(cmd)
   {
     case 'c':
-      server.write(" OK\n",4);
+      //server.write(" OK\n",4);
       break;
     case 'r':
       beenPressed = false;
@@ -135,13 +136,13 @@ void doorBellPress()
 //Close and lock the package box
 void closePackageBox()
 {
-
+  boxLocked = true;
 }
 
 //Open the package box, start to check if the weightsensor value has changed
 void openPackageBox() 
 {
-
+  boxLocked = false;
 }
 
 //Check the status of the box
@@ -149,7 +150,5 @@ void openPackageBox()
 // True = Closed / locked
 bool checkBoxStatus() 
 {
-  
-  
-  return false;
+  return boxLocked;
 }
