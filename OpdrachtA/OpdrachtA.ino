@@ -4,10 +4,7 @@
 
 // Set Ethernet Shield MAC address  (check yours)
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Ethernet adapter shield S. Oosterhaven
-int ethPort = 11250;                                  // Take a free port (check your router)
-
-int buttonPin = 2;
-boolean beenPressed = false;
+int ethPort = 11250;                                  // Take a free port (check your router
 
 int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
 int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
@@ -17,7 +14,6 @@ EthernetServer server(ethPort);              // EthernetServer instance (listeni
 void setup()
 {
   Serial.begin(9600);
-  pinMode(buttonPin, INPUT);
 
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -52,10 +48,6 @@ void loop()
   // Do what needs to be done while the socket is connected.
   while (ethernetClient.connected()) 
   {
-    if (ringBell()){
-      doorBellPress();
-    }
-
     // Execute command hen byte is received.
     while (ethernetClient.available())
     {
@@ -73,9 +65,6 @@ void loop()
 void executeCommand(char cmd)
 {     
   //*  Command explanation 
-  //*  R:  Received bell
-  //*      Confirmation from the app, it received the bell press
-  //*    Returns: nothing
   //*  L:  Lock package box
   //*      Call the function that will close and lock the package box
   //*    Returns: nothing
@@ -100,9 +89,6 @@ void executeCommand(char cmd)
   Serial.print("["); Serial.print(cmd); Serial.print("] -> ");
   switch(cmd)
   {
-    case 'r':
-      beenPressed = false;
-      break;
     case 'l':
       closePackageBox();
       break;
@@ -123,21 +109,6 @@ void executeCommand(char cmd)
         server.write(" NO\n", 4);
       }
   }
-}
-
-boolean ringBell() {
-  if (beenPressed == false)
-    if (digitalRead(buttonPin))
-      return true;
-
-  return false;
-}
-
-void doorBellPress() 
-{
-  Serial.println("\nBell has been pressed");
-  beenPressed = true;
-  server.write("BEL\n");
 }
 
 //Close and lock the package box
