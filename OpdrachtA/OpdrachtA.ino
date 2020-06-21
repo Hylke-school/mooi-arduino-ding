@@ -4,18 +4,25 @@
 
 // Set Ethernet Shield MAC address  (check yours)
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Ethernet adapter shield S. Oosterhaven
-int ethPort = 11250;                                  // Take a free port (check your router)
+int ethPort = 11250;                                  // Take a free port (check your router
 
-int buttonPin = 2;
-boolean beenPressed = false;
+boolean boxLocked = false;
+boolean buttonPressed = false;
+
+int buttPin = 2; //Pin where the doorbell is connected
+int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
+int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
 
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
-EthernetClient client;                       // EthernetClient instance (for sending http request for notifications)
+EthernetClient client;                       // EthernetClient instance, for sending POST request
 
 void setup()
 {
   Serial.begin(9600);
-  pinMode(buttonPin, INPUT);
+
+  pinMode(buttPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 
   Serial.println("Domotica project, Arduino Domotica Server\n");
 
@@ -25,17 +32,28 @@ void setup()
     Serial.println("Could not obtain IP-address from DHCP -> do nothing");
     while (true){ }   // no point in carrying on, so do nothing forevermore; check your router
   }
+
   //Start the ethernet server.
   server.begin();
   Serial.print("Listening address: ");
   Serial.print(Ethernet.localIP());
   Serial.print("\t Listening port: ");
   Serial.println(ethPort);
-  sendNotification();
 }
 
 void loop()
 {
+  if(beenPressed == false){
+    if(analogRead(buttPin) == 0){
+      sendNotification();
+      beenPressed = true;
+    }
+  }
+  else{
+    if(analogRead(buttPin) != 0){
+      beenPressed = false;
+    }
+  }
   // Listen for incomming connection (app)
   EthernetClient ethernetClient = server.available();
   if (!ethernetClient) {
@@ -47,10 +65,6 @@ void loop()
   // Do what needs to be done while the socket is connected.
   while (ethernetClient.connected()) 
   {
-    if (ringBell()){
-      doorBellPress();
-    }
-
     // Execute command hen byte is received.
     while (ethernetClient.available())
     {
@@ -68,21 +82,16 @@ void loop()
 void executeCommand(char cmd)
 {     
   //*  Command explanation 
-  //*  C:  Connect
-  //*      Confirmation the app is connected to the arduino
-  //*    Returns: OK on successful connection
-  //*  R:  Received bell
-  //*      Confirmation from the app, it received the bell press
-  //*    Returns: nothing
   //*  L:  Lock package box
   //*      Call the function that will close and lock the package box
   //*    Returns: nothing
   //*  U:  Unlock the package box
   //*      Calls the function that will open the package box.
-  //*      Start function to watch if the weight sensor has changed
   //*    Returns: nothing
   //*  S: Status of package box
-  //*    Return: CLS if box is closed and locked, returns OPN if box is unlocked
+  //*    Returns: CLS if box is closed and locked, returns OPN if box is unlocked
+  //*  P: Status of package, present or not
+  //*    Returns: YES if box contains package, NO if box does not contain package
   
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!!!!!!!!!!!!  IMPORTANT  !!!!!!!!!!!!!
@@ -97,12 +106,6 @@ void executeCommand(char cmd)
   Serial.print("["); Serial.print(cmd); Serial.print("] -> ");
   switch(cmd)
   {
-    case 'c':
-      server.write(" OK\n",4);
-      break;
-    case 'r':
-      beenPressed = false;
-      break;
     case 'l':
       closePackageBox();
       break;
@@ -115,35 +118,26 @@ void executeCommand(char cmd)
       else 
         server.write("OPN\n", 4);
       break;
+    case 'p':
+      if(HasPackage(trigPin, echoPin, 20)){ //Limit set to 20, change according to the box size
+        server.write("YES\n", 4);
+      }
+      else {
+        server.write(" NO\n", 4);
+      }
   }
-}
-
-boolean ringBell() {
-  if (beenPressed == false)
-    if (digitalRead(buttonPin))
-      return true;
-
-  return false;
-}
-
-void doorBellPress() 
-{
-  Serial.println("\nBell has been pressed");
-  beenPressed = true;
-  server.write("BEL\n");
-  sendNotification();
 }
 
 //Close and lock the package box
 void closePackageBox()
 {
-
+  boxLocked = true;
 }
 
 //Open the package box, start to check if the weightsensor value has changed
 void openPackageBox() 
 {
-
+  boxLocked = false;
 }
 
 //Check the status of the box
@@ -153,7 +147,33 @@ bool checkBoxStatus()
 {
   
   
-  return false;
+  return boxLocked;
+}
+
+//Checks if the box contains an object using the ultrasonic sensor
+//  trig = pin where trigger point is connected (use trigPin)
+//  echo = pin where echo point is connected (use echoPin)
+//  limit = maximum distance required to return true (I recommend the length of the box - 5)
+bool HasPackage(int trig, int echo, int limit){
+  float v = 0.0343; // Speed of sound at 20 degrees Celsius in centimeters/microsecond;
+  long t; // Time
+  int s; // Distance
+
+  // Sends out a soundwave
+  digitalWrite(trig, HIGH);
+  delay(10);
+  digitalWrite(trig, LOW);
+
+  t = pulseIn(echo, HIGH); //Returns the time between start and pulse recieved in microseconds
+
+  s = v * (0.5 * t); //Calculates the distance to an object in centimeters
+
+  if(s < limit){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 //Sends http request to custom PHP script, that sends HTTPS request to Firebase, to trigger notification in app
 //  data = JSON code for notification
@@ -164,16 +184,10 @@ void sendNotification(){
   String data = "{\"to\":\"/topics/notifications\",\"notification\": {\"body\": \"Someone rang your doorbell!\",\"title\" : \"Doorbell\",\"Image\":\"https://cdn1.iconfinder.com/data/icons/hands-pt-2/100/095_-_hand_ring-512.png\"}}";
   char server[] = "http://mooi-deurbel-ding.000webhostapp.com/api.php";
   
-  Serial.print("connecting to ");
-  Serial.print(server);
-  Serial.println("...");
-  Serial.print("With data:");
-  Serial.print(data);
-  Serial.println("...");
+  Serial.print("connecting to ");  Serial.print(server);  Serial.println("...");  Serial.print("With data:");  Serial.print(data);  Serial.println("...");
 
   if (client.connect("145.14.144.89", 80))  {
-   Serial.println("Connected to the server..");
-   Serial.println(client.remoteIP());
+   Serial.println("Connected to the server..");   Serial.println(client.remoteIP());
    client.println("POST /api.php HTTP/1.1");
    client.println("Authorization: key=AAAAiDM7u40:APA91bGO0pMhKbF_eMvLoP-k4Mxz16pbLn3WP-zsyL_DISf1q1KJmohQIly3zHwnH4zyZkeRqZrC-2yJ42RSgJA4i9x2Y1L5Rtvc-4QsBaAYj0mQOcFWC4J3_cYL951GaoJ-b9reKs5c");
    client.println("Host: mooi-deurbel-ding.000webhostapp.com");
