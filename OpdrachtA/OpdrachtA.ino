@@ -73,9 +73,6 @@ void loop()
 void executeCommand(char cmd)
 {     
   //*  Command explanation 
-  //*  C:  Connect
-  //*      Confirmation the app is connected to the arduino
-  //*    Returns: OK on successful connection
   //*  R:  Received bell
   //*      Confirmation from the app, it received the bell press
   //*    Returns: nothing
@@ -103,9 +100,6 @@ void executeCommand(char cmd)
   Serial.print("["); Serial.print(cmd); Serial.print("] -> ");
   switch(cmd)
   {
-    case 'c':
-      server.write(" OK\n",4);
-      break;
     case 'r':
       beenPressed = false;
       break;
