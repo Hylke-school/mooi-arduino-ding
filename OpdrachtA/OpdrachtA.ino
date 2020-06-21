@@ -6,6 +6,8 @@
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Ethernet adapter shield S. Oosterhaven
 int ethPort = 11250;                                  // Take a free port (check your router
 
+boolean boxLocked = false;
+
 int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
 int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
 
@@ -114,13 +116,13 @@ void executeCommand(char cmd)
 //Close and lock the package box
 void closePackageBox()
 {
-
+  boxLocked = true;
 }
 
 //Open the package box, start to check if the weightsensor value has changed
 void openPackageBox() 
 {
-
+  boxLocked = false;
 }
 
 //Check the status of the box
@@ -130,7 +132,7 @@ bool checkBoxStatus()
 {
   
   
-  return false;
+  return boxLocked;
 }
 
 //Checks if the box contains an object using the ultrasonic sensor
