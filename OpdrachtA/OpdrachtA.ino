@@ -43,17 +43,8 @@ void setup()
 
 void loop()
 {
-  if(beenPressed == false){
-    if(analogRead(buttPin) == 0){
-      sendNotification();
-      beenPressed = true;
-    }
-  }
-  else{
-    if(analogRead(buttPin) != 0){
-      beenPressed = false;
-    }
-  }
+  Notification(buttPin);
+  
   // Listen for incomming connection (app)
   EthernetClient ethernetClient = server.available();
   if (!ethernetClient) {
@@ -65,13 +56,14 @@ void loop()
   // Do what needs to be done while the socket is connected.
   while (ethernetClient.connected()) 
   {
-    // Execute command hen byte is received.
+    // Execute command when byte is received.
     while (ethernetClient.available())
     {
       char inByte = ethernetClient.read();
       executeCommand(inByte);
       inByte = NULL;
     } 
+    Notification(buttPin);
   }
   
   Serial.println("Application disonnected");
@@ -209,5 +201,18 @@ void sendNotification(){
   Serial.println("Finished!");
   client.flush();
   client.stop();
-  
+}
+
+void Notification(int button){
+  if(buttonPressed == false){
+    if(digitalRead(button) == 0){
+      sendNotification();
+      buttonPressed = true;
+    }
+  }
+  else{
+    if(digitalRead(button) != 0){
+      buttonPressed = false;
+    }
+  }
 }
