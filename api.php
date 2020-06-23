@@ -3,6 +3,7 @@
 // Takes raw data from the incoming HTTP request
 $json = file_get_contents('php://input');
 
+//start generating POST headers
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
 curl_setopt($curl, CURLOPT_POST, 1);
@@ -18,10 +19,13 @@ foreach (getallheaders() as $name => $value) {
         $hdr_out[] = 'Authorization: '. $value;
     }
 } 
+//set last headers
 curl_setopt($curl, CURLOPT_HTTPHEADER, $hdr_out);
 
+//execute HTTPS request, and get response
 $result = curl_exec($curl);
 
+//error handling
 if ($result) {
     $response_code= curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     curl_close($curl);
