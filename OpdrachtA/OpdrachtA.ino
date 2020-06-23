@@ -173,7 +173,7 @@ bool HasPackage(int trig, int echo, int limit){
 //  IMPORTANT, DNS does not work with this script, so you have to manually resolve the IP address and fill it in at client.connect!
 void sendNotification(){
   
-  String data = "{\"to\":\"/topics/notifications\",\"notification\": {\"body\": \"Someone rang your doorbell!\",\"title\" : \"Doorbell\",\"Image\":\"https://cdn1.iconfinder.com/data/icons/hands-pt-2/100/095_-_hand_ring-512.png\"}}";
+  String data = "{\"to\":\"/topics/notifications\",\"notification\": {\"body\": \"Someone rang your doorbell!\",\"title\" : \"Doorbell\"}}";
   char server[] = "http://mooi-deurbel-ding.000webhostapp.com/api.php";
   
   Serial.print("connecting to ");  Serial.print(server);  Serial.println("...");  Serial.print("With data:");  Serial.print(data);  Serial.println("...");
