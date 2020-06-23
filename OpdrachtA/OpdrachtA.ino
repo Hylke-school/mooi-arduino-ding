@@ -7,16 +7,20 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Ethernet adapter shield 
 int ethPort = 11250;                                  // Take a free port (check your router
 
 boolean boxLocked = false;
+boolean buttonPressed = false;
 
+int buttPin = 2; //Pin where the doorbell is connected
 int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
 int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
 
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
+EthernetClient client;                       // EthernetClient instance, for sending POST request
 
 void setup()
 {
   Serial.begin(9600);
 
+  pinMode(buttPin, INPUT);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
@@ -39,6 +43,8 @@ void setup()
 
 void loop()
 {
+  Notification(buttPin);
+  
   // Listen for incomming connection (app)
   EthernetClient ethernetClient = server.available();
   if (!ethernetClient) {
@@ -57,6 +63,7 @@ void loop()
       executeCommand(inByte);
       inByte = NULL;
     } 
+    Notification(buttPin);
   }
   
   Serial.println("Application disonnected");
@@ -158,5 +165,55 @@ bool HasPackage(int trig, int echo, int limit){
   }
   else{
     return false;
+  }
+
+}
+//Sends http request to custom PHP script, that sends HTTPS request to Firebase, to trigger notification in app
+//  data = JSON code for notification
+//  server = server address, not used
+//  IMPORTANT, DNS does not work with this script, so you have to manually resolve the IP address and fill it in at client.connect!
+void sendNotification(){
+  
+  String data = "{\"to\":\"/topics/notifications\",\"notification\": {\"body\": \"Someone rang your doorbell!\",\"title\" : \"Doorbell\"}}";
+  char server[] = "http://mooi-deurbel-ding.000webhostapp.com/api.php";
+  
+  Serial.print("connecting to ");  Serial.print(server);  Serial.println("...");  Serial.print("With data:");  Serial.print(data);  Serial.println("...");
+
+  if (client.connect("145.14.144.89", 80))  {
+   Serial.println("Connected to the server..");   Serial.println(client.remoteIP());
+   client.println("POST /api.php HTTP/1.1");
+   client.println("Authorization: key=AAAAiDM7u40:APA91bGO0pMhKbF_eMvLoP-k4Mxz16pbLn3WP-zsyL_DISf1q1KJmohQIly3zHwnH4zyZkeRqZrC-2yJ42RSgJA4i9x2Y1L5Rtvc-4QsBaAYj0mQOcFWC4J3_cYL951GaoJ-b9reKs5c");
+   client.println("Host: mooi-deurbel-ding.000webhostapp.com");
+   client.println("Content-Type: application/json");
+   client.print("Content-Length: ");
+   client.println(data.length());
+   client.print("\n");
+   client.print(data);
+  } else {
+    Serial.println("connection failed");
+  }
+
+  Serial.println("Data sent...Reading response..");
+  while (client.available())  {
+   char c = client.read();
+   Serial.print(c);
+  }
+
+  Serial.println("Finished!");
+  client.flush();
+  client.stop();
+}
+
+void Notification(int button){
+  if(buttonPressed == false){
+    if(digitalRead(button) == 0){
+      sendNotification();
+      buttonPressed = true;
+    }
+  }
+  else{
+    if(digitalRead(button) != 0){
+      buttonPressed = false;
+    }
   }
 }
