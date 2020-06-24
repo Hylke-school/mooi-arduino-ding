@@ -3,15 +3,16 @@
 #include <Ethernet.h>             // Ethernet library (use Ethernet2.h for new ethernet shield v2)
 
 // Set Ethernet Shield MAC address  (check yours)
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Ethernet adapter shield S. Oosterhaven
-int ethPort = 11250;                                  // Take a free port (check your router
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+int ethPort = 11250;
 
 boolean boxLocked = false;
 boolean buttonPressed = false;
 
-int buttPin = 2; //Pin where the doorbell is connected
+int buttonPin = 2; //Pin where the doorbell is connected
 int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
-int echoPin = 4; //Pin where the echo point of the ultrasonic sensor is connected
+int echoPin1 = 4; //Pin where the echo point of the first ultrasonic sensor is connected
+int echoPin2 = 5; //Pin where the echo point of the second ultrasonic sensor is connected
 
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
 EthernetClient client;                       // EthernetClient instance, for sending POST request
@@ -20,9 +21,10 @@ void setup()
 {
   Serial.begin(9600);
 
-  pinMode(buttPin, INPUT);
+  pinMode(buttonPin, INPUT);
   pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode(echoPin1, INPUT);
+  pinMode(echoPin2, INPUT);
 
   Serial.println("Domotica project, Arduino Domotica Server\n");
 
@@ -30,7 +32,7 @@ void setup()
   if (Ethernet.begin(mac) == 0)
   {
     Serial.println("Could not obtain IP-address from DHCP -> do nothing");
-    while (true){ }   // no point in carrying on, so do nothing forevermore; check your router
+    while (true){ }   // No point in carrying on, so do nothing forevermore; check your router
   }
 
   //Start the ethernet server.
@@ -43,12 +45,12 @@ void setup()
 
 void loop()
 {
-  Notification(buttPin);
+  TriggerNotification(buttPin);
   
   // Listen for incomming connection (app)
   EthernetClient ethernetClient = server.available();
   if (!ethernetClient) {
-    return; // wait for connection and blink LED
+    return; // wait for connection
   }
 
   Serial.println("Application connected");
@@ -63,10 +65,10 @@ void loop()
       executeCommand(inByte);
       inByte = NULL;
     } 
-    Notification(buttPin);
+    TriggerNotification(buttPin);
   }
   
-  Serial.println("Application disonnected");
+  Serial.println("Application disconnected");
 }
 
 // Implementation of (simple) protocol between app and Arduino
@@ -111,7 +113,7 @@ void executeCommand(char cmd)
         server.write("OPN\n", 4);
       break;
     case 'p':
-      if(HasPackage(trigPin, echoPin, 20)){ //Limit set to 20, change according to the box size
+      if(HasPackage(trigPin, echoPin1, 25) || HasPackage(trigPin, echoPin2, 25)){ //Limit set to 25, change according to the box size. 
         server.write("YES\n", 4);
       }
       else {
@@ -126,7 +128,7 @@ void closePackageBox()
   boxLocked = true;
 }
 
-//Open the package box, start to check if the weightsensor value has changed
+//Open the package box, start to check if the distancesensor value has changed
 void openPackageBox() 
 {
   boxLocked = false;
@@ -137,8 +139,6 @@ void openPackageBox()
 // True = Closed / locked
 bool checkBoxStatus() 
 {
-  
-  
   return boxLocked;
 }
 
@@ -168,6 +168,7 @@ bool HasPackage(int trig, int echo, int limit){
   }
 
 }
+
 //Sends http request to custom PHP script, that sends HTTPS request to Firebase, to trigger notification in app
 //  data = JSON code for notification
 //  server = server address, not used
@@ -204,7 +205,7 @@ void sendNotification(){
   client.stop();
 }
 
-void Notification(int button){
+void TriggerNotification(int button){
   if(buttonPressed == false){
     if(digitalRead(button) == 0){
       sendNotification();
