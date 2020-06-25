@@ -11,7 +11,7 @@ boolean buttonPressed = false;
 
 int buttonPin = 2; //Pin where the doorbell is connected
 int trigPin1 = 3; //Pin wehere the trigger point of the first ultrasonic sensor is connected
-int trigPin2 = 3; //Pin wehere the trigger point of the second ultrasonic sensor is connected
+int trigPin2 = 4; //Pin wehere the trigger point of the second ultrasonic sensor is connected
 int echoPin1 = 5; //Pin where the echo point of the first ultrasonic sensor is connected
 int echoPin2 = 6; //Pin where the echo point of the second ultrasonic sensor is connected
 
