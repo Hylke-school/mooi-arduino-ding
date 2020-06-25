@@ -10,9 +10,10 @@ boolean boxLocked = false;
 boolean buttonPressed = false;
 
 int buttonPin = 2; //Pin where the doorbell is connected
-int trigPin = 3; //Pin wehere the trigger point on the ultrasonic sensor is connected
-int echoPin1 = 4; //Pin where the echo point of the first ultrasonic sensor is connected
-int echoPin2 = 5; //Pin where the echo point of the second ultrasonic sensor is connected
+int trigPin1 = 3; //Pin wehere the trigger point of the first ultrasonic sensor is connected
+int trigPin2 = 3; //Pin wehere the trigger point of the second ultrasonic sensor is connected
+int echoPin1 = 5; //Pin where the echo point of the first ultrasonic sensor is connected
+int echoPin2 = 6; //Pin where the echo point of the second ultrasonic sensor is connected
 
 EthernetServer server(ethPort);              // EthernetServer instance (listening on port <ethPort>)
 EthernetClient client;                       // EthernetClient instance, for sending POST request
@@ -22,7 +23,8 @@ void setup()
   Serial.begin(9600);
 
   pinMode(buttonPin, INPUT);
-  pinMode(trigPin, OUTPUT);
+  pinMode(trigPin1, OUTPUT);
+  pinMode(trigPin2, OUTPUT);
   pinMode(echoPin1, INPUT);
   pinMode(echoPin2, INPUT);
 
@@ -113,7 +115,7 @@ void executeCommand(char cmd)
         server.write("OPN\n", 4);
       break;
     case 'p':
-      if(HasPackage(trigPin, echoPin1, 25) || HasPackage(trigPin, echoPin2, 25)){ //Limit set to 25, change according to the box size. 
+      if(HasPackage(trigPin1, echoPin1, 25) || HasPackage(trigPin2, echoPin2, 25)){ //Limit set to 25, change according to the box size. 
         server.write("YES\n", 4);
       }
       else {
@@ -156,7 +158,7 @@ bool HasPackage(int trig, int echo, int limit){
   delay(10);
   digitalWrite(trig, LOW);
 
-  t = pulseIn(echo, HIGH); //Returns the time between start and pulse recieved in microseconds
+  t = pulseIn(echo, HIGH, 2333); //Returns the time between start and pulse recieved in microseconds
 
   s = v * (0.5 * t); //Calculates the distance to an object in centimeters
 
